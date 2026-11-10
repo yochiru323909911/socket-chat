@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analiza Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <!-- Screen 1: choose a nickname -->
+    <section id="join-screen" class="card join">
+      <div class="logo">💬</div>
+      <h1>Analiza Chat</h1>
+      <p class="subtitle">צ'אט בזמן אמת עם Socket.io</p>
+
+      <form id="join-form">
+        <label for="nickname-input">איך קוראים לך?</label>
+        <input id="nickname-input" maxlength="20" autocomplete="off" placeholder="הכינוי שלך">
+        <button type="submit">כניסה לצ'אט</button>
+      </form>
+
+      <p id="join-error" class="error" hidden></p>
+      <p id="connection-status" class="status">מתחברת לשרת...</p>
+    </section>
+
+    <!-- Screen 2: the chat room -->
+    <section id="chat-screen" class="card chat" hidden>
+      <aside class="sidebar">
+        <h2>מחוברות עכשיו <span id="users-count" class="badge">0</span></h2>
+        <ul id="users-list"></ul>
+      </aside>
+
+      <div class="room">
+        <header class="room-header">
+          <h2># general</h2>
+          <span id="me"></span>
+        </header>
+
+        <ul id="messages"></ul>
+        <p id="typing" class="typing"></p>
+
+        <form id="message-form">
+          <input id="message-input" autocomplete="off" maxlength="300" placeholder="כתבי הודעה...">
+          <button type="submit">שליחה</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- The Socket.io server serves this file by itself, once it is attached to your http server (step 1) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
