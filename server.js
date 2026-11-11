@@ -19,3 +19,76 @@
 // Step 5: "disconnect" -> send to everyone: "system" -> "<nickname> עזבה את הצ'אט"  and  "users"
 
 // Bonus: GET /api/messages -> the last 20 chat messages
+
+
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+const PORT = 3000;
+
+app.use(express.static('public'));
+
+server.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
+})
+
+const users = [];
+const messages = [];
+
+io.on("connection", (socket) => { 
+    console.log(`User connected: ${socket.id}`);
+    socket.on("join", (nickname, callback) => {
+        const trimmedNickname = nickname.trim();
+        if (!trimmedNickname) {
+            callback({ ok: false, error: "חובה להזין כינוי" });
+            return;
+        }
+        if (users.includes(trimmedNickname)) {
+            callback({ ok: false, error: "הכינוי כבר תפוס" });
+            return;
+        }
+        socket.data.nickname = trimmedNickname;
+        users.push(trimmedNickname);
+        callback({ ok: true });
+        io.emit("system", `${trimmedNickname} הצטרפה לצ'אט`);
+        io.emit("users", users);
+    })
+    socket.on("chat:message", (text) => {
+        const trimmedText = text.trim();
+        if (!trimmedText || !socket.data.nickname)
+            return;
+        const nickname = socket.data.nickname;
+        const time = new Date().toISOString();
+        const message = { nickname, text: trimmedText, time };
+        messages.push(message);
+        if (messages.length > 20)
+            messages.shift();
+        io.emit("chat:message", message);
+    });
+    socket.on("typing", () => {
+        const nickname = socket.data.nickname;
+        socket.broadcast.emit("typing", nickname);
+    })
+    socket.on("disconnect", () => {
+        const nickname = socket.data.nickname;
+        if (nickname) {
+            users.splice(users.indexOf(nickname), 1);
+            io.emit("system", `${nickname} עזבה את הצ'אט`);
+            io.emit("users", users);
+        }
+    }) 
+})
+
+
+app.get("/api/messages", (req, res) => {
+    res.json(messages);
+});
